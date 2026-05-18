@@ -281,16 +281,14 @@ elif page == "📤 Upload & Predict":
 
             st.markdown("---")
             st.subheader("🔍 Prediction Results")
+                        st.dataframe(
+                df[["Prediction", "Fraud Score", "Risk Level", "Risk Reason"]].head(20),
+                use_container_width=True
+            )
 
-            st.dataframe(
-            df[["Prediction", "Fraud Score", "Risk Level", "Risk Reason"]].head(20),
-                 use_container_width=True
-           )
-
-# ─── AI Investigation Summary ─────────────────────
-
-def generate_ai_summary(score, risk):
-    return f"""
+            # ─── AI Investigation Summary ─────────────────────
+            def generate_ai_summary(score, risk):
+                return f"""
 AI detected suspicious banking activity.
 
 Risk Level: {risk}
@@ -304,14 +302,15 @@ Recommended Action:
 Freeze account and verify KYC immediately.
 """
 
-st.markdown("---")
-st.subheader("🤖 AI Investigation Summary")
+            st.markdown("---")
+            st.subheader("🤖 AI Investigation Summary")
 
-summary_text = generate_ai_summary(
-    df["Fraud Score"].iloc[0],
-    df["Risk Level"].iloc[0]
-)
+            summary_text = generate_ai_summary(
+                df["Fraud Score"].iloc[0],
+                df["Risk Level"].iloc[0]
+            )
 
+            st.warning(summary_text)
 st.warning(summary_text)
 
             fraud_count = int(sum(preds))
