@@ -247,19 +247,29 @@ elif page == "📤 Upload & Predict":
     st.title("📤 Upload CSV & Predict Fraud")
     st.markdown("---")
 
-    uploaded_file = st.file_uploader("Upload transaction CSV file", type=["csv"])
+    uploaded_file = st.file_uploader(
+        "Upload transaction CSV file",
+        type=["csv"]
+    )
 
     if uploaded_file:
         df = pd.read_csv(uploaded_file, index_col=0)
-        st.success(f"✅ File loaded: {df.shape[0]} rows, {df.shape[1]} columns")
+
+        st.success(
+            f"✅ File loaded: {df.shape[0]} rows, {df.shape[1]} columns"
+        )
+
         st.dataframe(df.head(), use_container_width=True)
 
         if st.button("🤖 Run AI Prediction"):
+
             df = df.apply(pd.to_numeric, errors="coerce").fillna(0)
 
             expected = 3923
+
             if df.shape[1] > expected:
                 df = df.iloc[:, :expected]
+
             elif df.shape[1] < expected:
                 for i in range(expected - df.shape[1]):
                     df[f"pad_{i}"] = 0
@@ -267,26 +277,41 @@ elif page == "📤 Upload & Predict":
             preds = model.predict(df)
             probs = model.predict_proba(df)[:, 1]
 
-            df["Prediction"] = ["🔴 FRAUD" if p == 1 else "🟢 SAFE" for p in preds]
+            df["Prediction"] = [
+                "🔴 FRAUD" if p == 1 else "🟢 SAFE"
+                for p in preds
+            ]
+
             df["Fraud Score"] = (probs * 100).round(1)
 
-            risk_levels, risk_reasons = [], []
+            risk_levels = []
+            risk_reasons = []
+
             for score in df["Fraud Score"]:
                 rl, rr = assign_risk(score)
                 risk_levels.append(rl)
                 risk_reasons.append(rr)
 
-            df["Risk Level"]  = risk_levels
+            df["Risk Level"] = risk_levels
             df["Risk Reason"] = risk_reasons
 
             st.markdown("---")
             st.subheader("🔍 Prediction Results")
-                        st.dataframe(
-                df[["Prediction", "Fraud Score", "Risk Level", "Risk Reason"]].head(20),
+
+            st.dataframe(
+                df[
+                    [
+                        "Prediction",
+                        "Fraud Score",
+                        "Risk Level",
+                        "Risk Reason"
+                    ]
+                ].head(20),
                 use_container_width=True
             )
 
             # ─── AI Investigation Summary ─────────────────────
+
             def generate_ai_summary(score, risk):
                 return f"""
 AI detected suspicious banking activity.
@@ -311,30 +336,45 @@ Freeze account and verify KYC immediately.
             )
 
             st.warning(summary_text)
-st.warning(summary_text)
 
             fraud_count = int(sum(preds))
-            safe_count  = len(preds) - fraud_count
-            total       = len(preds)
+            safe_count = len(preds) - fraud_count
+            total = len(preds)
 
             col1, col2, col3 = st.columns(3)
-            col1.metric("Fraud Transactions", f"{fraud_count} 🔴")
-            col2.metric("Safe Transactions",  f"{safe_count} 🟢")
-            col3.metric("Total Analyzed",      str(total))
 
-            # Risk summary counts
+            col1.metric(
+                "Fraud Transactions",
+                f"{fraud_count} 🔴"
+            )
+
+            col2.metric(
+                "Safe Transactions",
+                f"{safe_count} 🟢"
+            )
+
+            col3.metric(
+                "Total Analyzed",
+                str(total)
+            )
+
             summary = {
-                "HIGH":   df["Risk Level"].str.contains("HIGH").sum(),
+                "HIGH": df["Risk Level"].str.contains("HIGH").sum(),
                 "MEDIUM": df["Risk Level"].str.contains("MEDIUM").sum(),
-                "LOW":    df["Risk Level"].str.contains("LOW").sum(),
+                "LOW": df["Risk Level"].str.contains("LOW").sum(),
             }
 
             st.markdown("---")
             st.subheader("📄 Download Investigation Report")
 
-            # --- AUTOMATIC GENERATION & STABLE DOWNLOAD BUTTON ---
-            pdf_path = generate_pdf(summary, fraud_count, safe_count, total, 94.7)
-            
+            pdf_path = generate_pdf(
+                summary,
+                fraud_count,
+                safe_count,
+                total,
+                94.7
+            )
+
             with open(pdf_path, "rb") as f:
                 pdf_bytes = f.read()
 
@@ -345,11 +385,13 @@ st.warning(summary_text)
                 mime="application/pdf",
                 use_container_width=True
             )
-            
+
             st.success("✅ PDF report ready for download!")
-            
+
     else:
-        st.info("👆 Upload your DataSet.csv to run batch fraud prediction.")
+        st.info(
+            "👆 Upload your DataSet.csv to run batch fraud prediction."
+        )
 # ══════════════════════════════════════════════════════════════
 # PAGE 4 — FRAUD NETWORK
 # ══════════════════════════════════════════════════════════════
